@@ -2,7 +2,6 @@ import csv
 import socket
 import os
 import threading
-
 '''
 Parsing the incoming data -> data is separated by ','
 '''
@@ -14,22 +13,24 @@ Parsing the incoming data -> data is separated by ','
                  
                  socket is opened on port 7000 unless specified on a different port 
 '''
-def openSocket(trackLayout: str, trial: int, port=7000):
+def openSocket(trackLayout: str, trial: int, vehicles: int, port=7000):
     vehicle_data = None
     host = '127.0.0.1'
-    
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind( (host, port) ) 
-        s.listen(5)
-        conn, addr = s.accept()
-        with conn:
-            while True:
-                data = conn.recv(1024)
-                if not data:
-                    break
-                vehicle_data = data.decode()
-        log(vehicle_data.split(','), trackLayout, trial)
-        s.close()
+    for i in range(0, vehicles):
+        print("STARTING UP SOCKET", i)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind( (host, port) ) 
+            s.listen(5)
+            conn, addr = s.accept()
+            with conn:
+                while True:
+                    data = conn.recv(1024)
+                    if not data:
+                        break
+                    vehicle_data = data.decode()
+            log(vehicle_data.split(','), trackLayout, trial)
+            s.close()
+            print("CLOSING SOCKET", i)
     
 '''
     Data sent by Automotive-CPS:
@@ -64,13 +65,13 @@ def run():
 '''
     description: threads the python socket and gradlew build to communicate with each other
 '''
-def start(trials=1):
+def start(track="figure-8", trials=1, vehicles=1):
     for i in range(1, trials + 1):
         t1 = threading.Thread(target=run) 
-        t2 = threading.Thread(target=openSocket, args=("oval", i))
+        t2 = threading.Thread(target=openSocket, args=(track, i, vehicles))
         t1.start()
         t2.start() 
         t1.join()
         t2.join()
         
-start(trials=2)
+start(trials=30, vehicles=2)
