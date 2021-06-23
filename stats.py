@@ -65,13 +65,21 @@ def run():
 '''
     description: threads the python socket and gradlew build to communicate with each other
 '''
-def start(track="figure-8", trials=1, vehicles=1):
+def start(track="oval", trials=1, vehicles=1):
+    counter = 1
     for i in range(1, trials + 1):
         t1 = threading.Thread(target=run) 
-        t2 = threading.Thread(target=openSocket, args=(track, i, vehicles))
         t1.start()
-        t2.start() 
-        t1.join()
-        t2.join()
         
-start(trials=30, vehicles=2)
+        if track == "straight" and i % 2 == 0:
+            t2 = threading.Thread(target=openSocket, args=(track, counter, vehicles))
+            t2.start() 
+            counter = counter + 1
+        else:
+            t2 = threading.Thread(target=openSocket, args=(track, i, vehicles))
+            
+        t1.join()
+        if track == "striaght" and i % 2 == 0: t2.join()
+        if not(track == "straight") : t2.join()
+        
+start(track="straight", trials=60, vehicles=1)
